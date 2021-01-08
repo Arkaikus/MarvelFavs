@@ -8,7 +8,7 @@ import {
   IonRouterOutlet,
   IonTabBar,
   IonTabButton,
-  IonTabs, IonToast
+  IonTabs
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import SignIn from './pages/auth/SignIn';
@@ -87,7 +87,6 @@ class App extends React.Component<any,any> {
   }
 
   privateRoutes(){
-    let self = this;
     return (
         <IonReactRouter>
           <IonTabs>

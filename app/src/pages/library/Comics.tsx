@@ -36,10 +36,14 @@ export class Comics extends React.Component<any, any>{
 
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<any>, snapshot?: any) {
         if(!!this.state.title && this.state.doSearch){
-            console.log("Search title updated", this.state.title)
+            // console.log("Search title updated", this.state.title)
             this.filterData(this.state.title);
-        }else{
-            this.state.disableLoad=false;
+        }
+
+        if(prevState.title !== this.state.title && !this.state.title){
+            this.setState({
+                disableLoad:false
+            })
         }
     }
 

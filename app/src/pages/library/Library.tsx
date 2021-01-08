@@ -4,10 +4,8 @@ import {
     IonContent, IonGrid,
     IonHeader,
     IonItem,
-    IonLabel,
     IonPage,
     IonRow,
-    IonText,
     IonTitle,
     IonToolbar
 } from "@ionic/react";
