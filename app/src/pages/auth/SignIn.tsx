@@ -18,25 +18,27 @@ import Cookies from 'js-cookie';
 export default class SignIn extends React.Component<any,any>{
     static contextType = AppContext
     state = {
-        badLogin:false,
         username:'',
         password:''
     }
-    badLoginAlert = (
-        <IonItem color="danger">
-            <IonLabel>El usuario o contraseña erroneos</IonLabel>
-        </IonItem>
-    );
 
     submitForm(e:any){
         let self = this;
         e.preventDefault();
         e.stopPropagation();
         self.context.api.signIn(self.state.username, self.state.password)
-            .then((data:any)=>{
-                Cookies.set('jwt',data.access);
-                console.log(data);
-                window.location.href='/';
+            .then((res:Response)=>{
+                res.json().then((data:any)=>{
+                    if(res.ok){
+                        Cookies.set('jwt',data.access);
+                        window.location.href='/';
+                    }else{
+                        self.context.setToast({
+                            msg:data.detail,
+                            color:'danger'
+                        });
+                    }
+                });
             });
     }
 
@@ -45,7 +47,7 @@ export default class SignIn extends React.Component<any,any>{
         return (
             <IonPage>
                 <IonHeader>
-                    <IonToolbar>
+                    <IonToolbar className="ion-text-center">
                         <IonTitle>Sign In</IonTitle>
                     </IonToolbar>
                 </IonHeader>
@@ -64,7 +66,6 @@ export default class SignIn extends React.Component<any,any>{
                                 <form onSubmit={(e) => {
                                     self.submitForm(e);
                                 }}>
-                                    {self.state.badLogin && self.badLoginAlert}
                                     <IonItem lines="full">
                                         <IonLabel position="floating">Username</IonLabel>
                                         <IonInput type="text" required

@@ -35,6 +35,7 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import './theme/custom.css';
 
 import {bookOutline, enterOutline, lockClosedOutline, logOutOutline, searchOutline} from "ionicons/icons";
 import AppContext from "./data/context";
@@ -50,11 +51,9 @@ class App extends React.Component<any,any> {
   componentDidMount() {
     let self = this;
     self.context.api.loggedIn().then((res:boolean)=>{
-      self.context.validJwt = res;
+      self.context.setValidJwt(res);
     }).finally(()=>{
-      self.setState({
-        loading:false
-      })
+      self.setState({ loading:false });
     });
   }
 

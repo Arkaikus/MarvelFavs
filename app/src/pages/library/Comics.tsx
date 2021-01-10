@@ -1,35 +1,55 @@
 import React from "react";
 import {
     IonButton,
+    IonButtons,
     IonCol,
-    IonContent,
-    IonGrid, IonIcon,
-    IonInfiniteScroll,
-    IonInfiniteScrollContent,
-    IonItem, IonLabel,
+    IonContent, IonHeader,
+    IonIcon,
+    IonItem,
+    IonLabel,
+    IonLoading,
     IonPage,
     IonRow,
     IonSearchbar,
-    IonThumbnail
+    IonThumbnail, IonTitle,
+    IonToolbar
 } from "@ionic/react";
-import {starOutline} from "ionicons/icons";
+import {chevronBack, chevronForward, eyeOutline} from "ionicons/icons";
+import AppContext from "../../data/context";
+import ComicDetail from "../../components/ComicDetail";
 
 
 export class Comics extends React.Component<any, any>{
+    static contextType = AppContext;
     state = {
         title:'',
         offset:0,
         limit:20,
+        page:1,
         total:1,
+        totalPages:1,
+        loading:true,
         disableLoad:false,
         doSearch:false,
+        showDetail:false,
+        selectedComic: {
+            comicId:"",
+            title:"",
+            thumbnail:"",
+            description:"",
+        },
+        toast:{
+            msg:'',
+            type:'primary'
+        },
+        alreadyFavorite:false,
         comics: [],
         searchComics: []
     }
 
     componentDidMount() {
         console.log("did mount!!!", this.state);
-        this.fetchData().then(()=>{
+        this.fetchData(this.state.page).then(()=>{
             console.log("load finished");
         });
     }
@@ -59,52 +79,123 @@ export class Comics extends React.Component<any, any>{
         });
     }
 
-    async fetchData(){
+    async fetchData(page:number){
         let self = this;
-        console.log("fetching data from", self.state.offset, "to",self.state.limit, "disableLoad",self.state.disableLoad);
-        let ts = "111111";
-        let key = "57422c4803fb8c8b6625b7f8b6151a6f";
-        let hash = "91147ef574e2e6026efd61f501616305";
-        let url = `http://gateway.marvel.com/v1/public/comics?ts=${ts}&apikey=${key}&hash=${hash}`;
+        self.setState({
+            loading:true,
+        })
 
-        if (self.state.offset) url += '&offset=' + self.state.offset;
-        if (self.state.limit) url += '&limit=' + self.state.limit;
-        const comics = await fetch(url);
-        comics
-            .json()
+        let offset = Math.trunc((page-1)*self.state.limit)
+        let params = {
+            offset:offset,
+            limit:self.state.limit
+        }
+        console.log("fetching data from", offset, "to",self.state.limit, "disableLoad",self.state.disableLoad);
+        self.context.api.comics(params)
             .then(async (response:any)=>{
+                let totalPages = Math.trunc(response.data.total/self.state.limit);
                 self.setState({
+                    loading:false,
+                    offset:offset,
+                    page:page,
                     total:response.data.total,
-                    offset: self.state.offset+self.state.limit,
-                    comics:[
-                        ...self.state.comics,
-                        ...response.data.results
-                    ]
+                    totalPages:totalPages,
+                    comics:response.data.results
                 });
                 console.log("data fetched");
             })
-            .catch(err => console.error(err));
+            .catch((err:any) => console.error(err));
     }
 
-    async fetchNext($event: CustomEvent<void>) {
+    pagination(){
         let self=this;
-        if (self.state.offset < self.state.total) {
-            await this.fetchData();
-        }else{
-            self.state.disableLoad=true;
+        let buttons = [];
+
+        let start = self.state.page - 5;
+        if (start <= 0) start = 1;
+
+        let end = start+10;
+        if (end>=self.state.totalPages) {
+            start = self.state.totalPages - 11;
+            end = self.state.totalPages-1
         }
 
-        await ($event.target as HTMLIonInfiniteScrollElement).complete();
+        for(let page=start; page<=end;page++){
+            buttons.push(
+                <IonButton key={page}
+                           fill={(page===self.state.page)? 'solid':'clear'}
+                           color="primary"
+                           onClick={() => self.fetchData(page)}>
+                    {page}
+                </IonButton>
+            )
+        }
+        buttons.push(
+            <IonButton key={self.state.totalPages}
+                       fill={(self.state.page===self.state.totalPages)? 'solid':'clear'}
+                       color="primary"
+                       onClick={() => self.fetchData(self.state.totalPages)}>
+                {self.state.totalPages}
+            </IonButton>
+        )
+
+        return (
+            <IonToolbar>
+                <IonButtons slot="start">
+                    <IonButton onClick={()=>self.fetchData(1)}>
+                        <IonIcon icon={chevronBack}/>
+                        <IonIcon icon={chevronBack}/>
+                    </IonButton>
+                    <IonButton onClick={()=> {
+                        if(self.state.page >= 2)
+                            self.fetchData(self.state.page-1)
+                    }}>
+                        <IonIcon icon={chevronBack}/>
+                    </IonButton>
+                </IonButtons>
+                <IonButtons className="ion-justify-content-center d-flex flex-wrap" >
+                    {buttons}
+                </IonButtons>
+                <IonButtons slot="end">
+                    <IonButton onClick={()=> {
+                        if(self.state.page < self.state.totalPages)
+                            self.fetchData(self.state.page+1)
+                    }}>
+                        <IonIcon icon={chevronForward}/>
+                    </IonButton>
+                    <IonButton onClick={()=>self.fetchData(self.state.totalPages)}>
+                        <IonIcon icon={chevronForward}/>
+                        <IonIcon icon={chevronForward}/>
+                    </IonButton>
+                </IonButtons>
+
+            </IonToolbar>
+        );
     }
 
     render() {
         let self = this;
-        //<React.Fragment>
-        //             </React.Fragment>
-        return (
-            <IonPage>
-                <IonContent fullscreen>
-                    <IonGrid>
+        if(self.state.loading)
+            return(
+                <IonPage>
+                    <IonContent fullscreen>
+                        <IonLoading isOpen={true} message="Loading Comics..." />
+                    </IonContent>
+                </IonPage>
+            );
+        else
+            return (
+                <IonPage>
+                    <IonHeader>
+                        <IonToolbar className="ion-text-center">
+                            <IonTitle>Comics</IonTitle>
+                        </IonToolbar>
+                    </IonHeader>
+                    <IonContent fullscreen>
+                        {self.state.showDetail &&
+                        <ComicDetail showDetail={self.state.showDetail}
+                                     comic={self.state.selectedComic}
+                                     dismiss={()=>self.setState({showDetail:false})} />}
                         <IonRow className="ion-padding ion-justify-content-center">
                             <IonCol size="12" sizeLg="8" sizeXl="6">
                                 <IonSearchbar placeholder="Search Comics"
@@ -114,6 +205,7 @@ export class Comics extends React.Component<any, any>{
                                                   title:e.detail.value!
                                               })}
                                               showCancelButton="focus" />
+                                {self.pagination()}
                                 {(!self.state.title? self.state.comics :self.state.searchComics).map((comic:any, i:number)=>(
                                     <IonItem key={i}>
                                         <IonThumbnail slot="start">
@@ -123,115 +215,23 @@ export class Comics extends React.Component<any, any>{
                                             <h3>{comic.title}</h3>
                                             <p>Page count: {comic.pageCount}</p>
                                         </IonLabel>
-                                        <IonButton color="secondary">
-                                            <IonIcon icon={starOutline}/>
+                                        <IonButton fill="clear" onClick={()=>self.setState({
+                                            showDetail:true,
+                                            selectedComic:{
+                                                comicId: comic.id,
+                                                title: comic.title,
+                                                thumbnail:comic.thumbnail.path+'.'+comic.thumbnail.extension,
+                                                description: (comic.description?comic.description:""),
+                                            },
+                                        })}>
+                                            <IonIcon icon={eyeOutline} color="ternary"/>
                                         </IonButton>
                                     </IonItem>
                                 ))}
                             </IonCol>
                         </IonRow>
-                    </IonGrid>
-                    <IonInfiniteScroll threshold="0px"
-                                       disabled={self.state.disableLoad}
-                                       onIonInfinite={(e: CustomEvent<void>) => self.fetchNext(e)}>
-                        <IonInfiniteScrollContent
-                            loadingSpinner="bubbles"
-                            loadingText="Loading more comics...">
-                        </IonInfiniteScrollContent>
-                    </IonInfiniteScroll>
-                </IonContent>
-            </IonPage>
-
-        );
+                    </IonContent>
+                </IonPage>
+            );
     }
 }
-
-
-//
-// export const Comics: React.FC = () => {
-//     const [disableLoad, setDisableLoad]=useState<boolean>(false);
-//     const [offset, setOffset] = useState<number>(0);
-//     const [limit, setLimit] = useState<number>(5);
-//     const [title,setTitle]=useState<string>('');
-//     const [favorites,setFavorites]=useState<any[]>([]);
-//
-//     async function fetchData(title:string){
-//         if (limit < users.length) {
-//             console.log('Loading data...');
-//             await wait(500);
-//             // infiniteScroll.complete();
-//             let favs = users.slice(offset,limit);
-//             setFavorites([...favs]);
-//             setDisableLoad(false);
-//             setOffset(offset+5);
-//             setLimit(limit+5);
-//             console.log('Done');
-//         } else {
-//             console.log('No More Data');
-//             setDisableLoad(true);
-//         }
-//         // let ts = "111111";
-//         // let key = "57422c4803fb8c8b6625b7f8b6151a6f";
-//         // let hash = "91147ef574e2e6026efd61f501616305";
-//         // let url = `http://gateway.marvel.com/v1/public/comics?ts=${ts}&apikey=${key}&hash=${hash}`;
-//         // if (title) url += '&title=' + title;
-//         // if (offset) url += '&offset=' + offset;
-//         // if (limit) url += '&limit=' + limit;
-//         // console.log(url);
-//         // const comics = await fetch(url);
-//         // comics
-//         //     .json()
-//         //     .then(async (response:any)=>{
-//         //         console.log(offset,limit, response.data.total);
-//         //         setFavorites([...response.data.results]);
-//         //         setDisableLoad(limit < response.data.total);
-//         //         setOffset(offset+20);
-//         //         setLimit(limit+20);
-//         //         console.log(offset,limit);
-//         //     })
-//         //     .catch(err => console.error(err));
-//         // setFavorites(favs.slice(offset, limit));
-//
-//     }
-//
-//     useIonViewWillEnter(async () => {
-//         await fetchData(title);
-//     });
-//
-//     async function searchNext($event: CustomEvent<void>) {
-//         await fetchData(title);
-//         await ($event.target as HTMLIonInfiniteScrollElement).complete();
-//     }
-//
-//     return (
-//         <React.Fragment>
-//             <IonPage>
-//                 <IonContent>
-//                     <IonSearchbar placeholder="Search Comics"
-//                                   value={title}
-//                                   onIonChange={e => setTitle(e.detail.value!)}
-//                                   showCancelButton="focus" />
-//                     <IonGrid>
-//                         <IonRow className="ion-padding ion-justify-content-center">
-//                             <IonCol size="12" sizeLg="8" sizeXl="6">
-//                                 {favorites.map((comic:any, i:number)=>(
-//                                     <IonItem key={i}>
-//                                         {comic.title}
-//                                     </IonItem>
-//                                 ))}
-//                             </IonCol>
-//                         </IonRow>
-//                     </IonGrid>
-//                     <IonInfiniteScroll threshold="100px"
-//                                        disabled={disableLoad}
-//                                        onIonInfinite={(e: CustomEvent<void>) => searchNext(e)}>
-//                         <IonInfiniteScrollContent
-//                             loadingSpinner="bubbles"
-//                             loadingText="Loading more comics...">
-//                         </IonInfiniteScrollContent>
-//                     </IonInfiniteScroll>
-//                 </IonContent>
-//             </IonPage>
-//         </React.Fragment>
-//     );
-// }

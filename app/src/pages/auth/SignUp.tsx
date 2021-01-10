@@ -39,9 +39,9 @@ export default class SignUp extends React.Component<any,any>{
         e.stopPropagation();
 
         if(self.state.password !== self.state.confirm_password)
-            self.setState({
-                error:true,
-                errorMsg:"Password confirmation does not match"
+            self.context.setToast({
+                msg:'Password and confirmation must be the same',
+                color:'danger'
             })
         else
             self.context.api.signUp({
@@ -52,12 +52,15 @@ export default class SignUp extends React.Component<any,any>{
                 console.log("success",success);
                 if(success){
                     self.props.history.push('/signin');
-                }else{
-                    self.setState({
-                        error:true,
-                        errorMsg:'Something went wrong, try again!',
+                    self.context.setToast({
+                        msg:'Please use your credentials for sign in',
+                        color:'danger'
                     })
-
+                }else{
+                    self.context.setToast({
+                        msg:'Something went wrong, try again!',
+                        color:'danger'
+                    })
                 }
             })
     }
@@ -67,7 +70,7 @@ export default class SignUp extends React.Component<any,any>{
         return (
             <IonPage>
                 <IonHeader>
-                    <IonToolbar>
+                    <IonToolbar className="ion-text-center">
                         <IonTitle>Sign Up</IonTitle>
                     </IonToolbar>
                 </IonHeader>
@@ -86,7 +89,6 @@ export default class SignUp extends React.Component<any,any>{
                                 <form onSubmit={(e) => {
                                     self.submitForm(e);
                                 }}>
-                                    {self.state.error && self.error()}
                                     <IonItem lines="full">
                                         <IonLabel position="floating">Username</IonLabel>
                                         <IonInput type="text" required
