@@ -38,8 +38,8 @@ export default class Api{
     private readonly endpoints: ApiEndpoints;
 
     constructor() {
-        this.apiHost = "http://localhost:8080/";
-        this.marvelApiHost = "http://gateway.marvel.com/";
+        this.apiHost = "https://marvel-favs-api.herokuapp.com/";
+        this.marvelApiHost = "https://gateway.marvel.com/";
 
         this.marvelAuth = {
             ts : "111111",
