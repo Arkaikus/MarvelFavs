@@ -23,7 +23,6 @@ export default class ComicDetail extends React.Component<any, any>{
         if(!self.props.hasOwnProperty('alreadyFavorite'))
             self.context.api.favorites(self.props.comic.comicId).then(
                 (res: Response) => {
-                    res.json().then(console.log);
                     self.setState({
                         alreadyFavorite: res.ok
                     });
@@ -38,7 +37,6 @@ export default class ComicDetail extends React.Component<any, any>{
 
     addFavorite(){
         let self = this;
-        console.log(self.props.comic);
         self.context.api.addFavorite(self.props.comic).then((request:any)=>{
             if(request.ok) {
                 self.context.setToast({
@@ -51,6 +49,7 @@ export default class ComicDetail extends React.Component<any, any>{
                     color: 'danger'
                 });
             }
+            self.context.setFetchFavorites(true);
             self.props.dismiss();
         })
     }
@@ -69,6 +68,7 @@ export default class ComicDetail extends React.Component<any, any>{
                     color: 'danger'
                 });
             }
+            self.context.setFetchFavorites(true);
             self.props.dismiss();
         })
     }

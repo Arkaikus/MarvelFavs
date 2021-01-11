@@ -49,7 +49,7 @@ export default class SignUp extends React.Component<any,any>{
                 email:self.state.email,
                 password:self.state.password
             }).then((success:boolean)=>{
-                console.log("success",success);
+                // console.log("success",success);
                 if(success){
                     self.props.history.push('/signin');
                     self.context.setToast({
