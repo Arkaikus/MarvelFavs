@@ -7,3 +7,5 @@ WORKDIR /app
 RUN npm install
 RUN npm install ionic
 RUN npx ionic build --prod
+
+CMD npx serve "/app/build" -p $PORT
