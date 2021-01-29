@@ -1,14 +1,25 @@
 version: '3.4'
 
 services:
-  client:
+  web:
     restart: always
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.web
     environment:
       PORT: 80
     expose:
       - 8081
     ports:
       - "8081:80"
+  dev:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      PORT: 80
+    expose:
+      - 8082
+    ports:
+      - "8082:80"

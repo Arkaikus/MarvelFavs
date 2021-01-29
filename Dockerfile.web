@@ -1,0 +1,9 @@
+FROM node:14
+
+COPY app/build/ /app
+
+WORKDIR /app
+
+RUN npm install serve
+
+CMD npx serve "/app/" -p $PORT
