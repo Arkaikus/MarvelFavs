@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  client:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - 8081
+    ports:
+      - "8081:80"
+    command:
+      npx serve /app/build -p 80
