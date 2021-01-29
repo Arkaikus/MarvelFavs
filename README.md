@@ -13,14 +13,18 @@ For development
 - Then launch the development server with `ionic serve`
 - For bundling run `ionic build --prod`
 
+This app comunicates with (marvel-favs-api)[https://marvel-favs-api.herokuapp.com] by default, 
+change it in /app/src/data/api.ts line 41
+
 ## Deploy
 
 For deployment
 
 ### Docker
 
-Run `make build` to create the docker image, then `make run` to start the container,
-modify the port at `docker-compose.yml` file
+Run `make build` to create the docker image, then `make run` to start the container
+
+the container runs on port `8081` feel free to change it in `docker-compose.yml`
 
 ### Heroku
 
